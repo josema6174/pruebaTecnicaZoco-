@@ -83,7 +83,7 @@ export default function AuditTimeline({ restaurants }: { restaurants: Restaurant
                 {formatDate(log.creado_en)}
               </span>
               <p className="text-xs font-bold text-[var(--accent)]">
-                {restaurants?.find(r => r.id === log.restaurante_id)?.nombre || log.valor_nuevo?.nombre || log.valor_anterior?.nombre || "Restaurante Desconocido"}
+                {restaurants?.find(r => String(r.id) === String(log.restaurante_id))?.nombre || log.valor_nuevo?.nombre || log.valor_anterior?.nombre || "Restaurante Desconocido"}
               </p>
               <p className="text-sm text-[var(--text-primary)] font-medium">
                 {log.accion}
