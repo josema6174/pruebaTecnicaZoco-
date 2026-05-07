@@ -27,8 +27,10 @@ from supabase import create_client, Client
 
 # ── Configuración ────────────────────────────────────────────────────────────
 
-# Cargamos las variables de entorno desde el archivo .env del proyecto.
-load_dotenv("apis.env", override=True)
+# Cargamos las variables de entorno desde el archivo apis.env del proyecto.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(BASE_DIR, "apis.env")
+load_dotenv(env_path, override=True)
 
 # Google Places API
 API_KEY: str | None = os.getenv("GOOGLE_PLACES_API_KEY")
@@ -53,6 +55,7 @@ FIELD_MASK = ",".join(
         "places.userRatingCount",
         "places.regularOpeningHours",
         "places.reviews",
+        "places.photos",
     ]
 )
 
@@ -118,13 +121,25 @@ def get_places(query: str) -> list[dict]:
         opening_hours = place.get("regularOpeningHours", {})
         horarios = opening_hours.get("weekdayDescriptions", [])
 
-        # Reseñas: extraemos solo el texto de cada review.
-        reviews_raw = place.get("reviews", [])
-        resenas_texto = [
-            rev.get("text", {}).get("text", "")
+        # Reseñas: lista de diccionarios (máximo 5)
+        reviews_raw = place.get("reviews", [])[:5]
+        reseñas = [
+            {
+                "autor": rev.get("authorAttribution", {}).get("displayName", "Anónimo"),
+                "texto": rev.get("originalText", {}).get("text", ""),
+                "rating": rev.get("rating"),
+            }
             for rev in reviews_raw
-            if rev.get("text", {}).get("text")
+            if rev.get("originalText", {}).get("text")
         ]
+
+        # Foto: extraemos el nombre de la primera foto y construimos la URL
+        photos = place.get("photos", [])
+        foto_url = ""
+        if photos:
+            photo_name = photos[0].get("name")
+            if photo_name:
+                foto_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=400&maxWidthPx=400&key={API_KEY}"
 
         results.append(
             {
@@ -134,7 +149,8 @@ def get_places(query: str) -> list[dict]:
                 "calificacion": place.get("rating"),
                 "cantidad_resenas": place.get("userRatingCount"),
                 "horarios": horarios,
-                "resenas_texto": resenas_texto,
+                "foto_url": foto_url,
+                "reseñas": reseñas,
             }
         )
 
@@ -144,45 +160,52 @@ def get_places(query: str) -> list[dict]:
 # ── Funciones: OpenAI (IA) ───────────────────────────────────────────────────
 
 
-def enrich_with_openai(place: dict, localidad_original: str) -> dict:
-    """Envía los datos de un restaurante a OpenAI para extraer metadatos.
+def enrich_batch_with_openai(places_data: list[dict], localidad_original: str) -> dict:
+    """Envía la lista completa de restaurantes de una localidad a OpenAI.
 
-    GPT-4o-mini analiza el nombre, la dirección y las reseñas para devolver:
-    - ``localidad_real``: la ciudad real extraída de la dirección.
-    - ``categoria``: tipo de restaurante en una sola palabra.
-    - ``resumen_ia``: resumen del ambiente en máximo 15 palabras.
-
-    Si OpenAI falla por cualquier motivo, devuelve valores por defecto
-    para no interrumpir la ejecución del pipeline principal.
-
-    Args:
-        place: Diccionario con los datos del restaurante.
-        localidad_original: Localidad usada en la búsqueda (fallback).
-
-    Returns:
-        Diccionario con las claves ``localidad_real``, ``categoria`` y ``resumen_ia``.
+    Para evitar exceder el límite de tokens (lo que causa JSONs cortados),
+    solo envía los campos esenciales a la IA y pide que devuelva únicamente
+    el ID y los campos calculados. Luego hace el merge localmente.
     """
-    defaults = {
-        "localidad_real": localidad_original,
-        "categoria": "Sin categoría",
-        "resumen_ia": "Sin resumen",
-    }
-
     if not OPENAI_API_KEY:
         print("  [WARN] OPENAI_API_KEY no configurada. Usando valores por defecto.")
-        return defaults
-
-    # Preparamos el texto de reseñas (limitado para no exceder tokens).
-    resenas = " | ".join(place.get("resenas_texto", [])[:5]) or "Sin reseñas disponibles"
+        for p in places_data:
+            p["localidad_real"] = localidad_original
+            p["categoria"] = "Sin categoría"
+            p["resumen_ia"] = "Sin resumen"
+        return {"restaurantes_limpios": places_data}
 
     system_msg = (
-        "Eres un experto procesador de datos. Devuelve estrictamente un JSON con 3 claves: "
-        "'localidad_real' (extrae la ciudad real de la dirección corrigiendo discrepancias), "
-        "'categoria' (asigna una sola palabra como Parrilla, Pizzería, Cafetería, etc.), "
-        "y 'resumen_ia' (un resumen del ambiente de máximo 15 palabras)."
+        "Eres un analista QA de datos. Recibes un JSON con una lista de restaurantes "
+        "extraídos de Google Maps.\n"
+        "1. Identifica duplicados semánticos (mismo lugar, variaciones de nombre/dirección).\n"
+        "2. A los registros únicos, asígnales: 'localidad_real', 'categoria' "
+        "(una sola palabra), y 'resumen_ia' (máx 15 palabras).\n"
+        "Devuelve un JSON estrictamente con este formato:\n"
+        "{\n"
+        '  "analisis": [\n'
+        "    {\n"
+        '      "id": "el_id_original",\n'
+        '      "es_duplicado": false,\n'
+        '      "localidad_real": "Ciudad",\n'
+        '      "categoria": "Categoría",\n'
+        '      "resumen_ia": "Resumen breve..."\n'
+        "    }\n"
+        "  ]\n"
+        "}"
     )
 
-    user_msg = f"Nombre: {place['nombre']}, Dirección: {place['direccion']}, Reseñas: {resenas}"
+    # Enviamos una versión reducida para no gastar tantos tokens
+    slim_data = []
+    for p in places_data:
+        slim_data.append({
+            "id": p["id"],
+            "nombre": p["nombre"],
+            "direccion": p["direccion"],
+            "resenas": [r["texto"] for r in p.get("reseñas", [])[:3]]
+        })
+
+    user_msg = json.dumps(slim_data, ensure_ascii=False)
 
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
@@ -197,20 +220,35 @@ def enrich_with_openai(place: dict, localidad_original: str) -> dict:
         )
 
         result = json.loads(response.choices[0].message.content)
+        analisis = result.get("analisis", [])
+        
+        # Mapeamos los resultados por ID
+        ai_map = {item["id"]: item for item in analisis if "id" in item}
+        
+        restaurantes_limpios = []
+        for p in places_data:
+            pid = p.get("id")
+            ai_data = ai_map.get(pid, {})
+            
+            # Si la IA dice que es duplicado, lo saltamos
+            if ai_data.get("es_duplicado", False):
+                continue
+                
+            p["localidad_real"] = ai_data.get("localidad_real", localidad_original)
+            p["categoria"] = ai_data.get("categoria", "Sin categoría")
+            p["resumen_ia"] = ai_data.get("resumen_ia", "Sin resumen")
+            
+            restaurantes_limpios.append(p)
+            
+        return {"restaurantes_limpios": restaurantes_limpios}
 
-        # Validamos que las 3 claves estén presentes.
-        return {
-            "localidad_real": result.get("localidad_real", localidad_original),
-            "categoria": result.get("categoria", "Sin categoría"),
-            "resumen_ia": result.get("resumen_ia", "Sin resumen"),
-        }
-
-    except json.JSONDecodeError:
-        print(f"  [WARN] OpenAI devolvió un JSON inválido para '{place['nombre']}'. Usando defaults.")
-        return defaults
     except Exception as err:
-        print(f"  [WARN] Error de OpenAI para '{place['nombre']}': {err}. Usando defaults.")
-        return defaults
+        print(f"  [WARN] Error de OpenAI procesando lote: {err}. Usando defaults.")
+        for p in places_data:
+            p["localidad_real"] = localidad_original
+            p["categoria"] = "Sin categoría"
+            p["resumen_ia"] = "Sin resumen"
+        return {"restaurantes_limpios": places_data}
 
 
 # ── Funciones: Supabase ──────────────────────────────────────────────────────
@@ -232,7 +270,7 @@ def _get_supabase_client() -> Client:
 
 
 def save_to_supabase(places_data: list[dict], localidad: str) -> None:
-    """Enriquece cada restaurante con Gemini e inserta/actualiza en Supabase.
+    """Enriquece el lote con Gemini e inserta/actualiza en Supabase.
 
     Utiliza ``upsert`` con ``google_place_id`` como columna de conflicto
     para evitar registros duplicados: si el restaurante ya existe se
@@ -248,25 +286,26 @@ def save_to_supabase(places_data: list[dict], localidad: str) -> None:
 
     supabase = _get_supabase_client()
 
-    # Enriquecemos cada restaurante con OpenAI antes de insertar.
-    print("🤖 Procesando datos con OpenAI (gpt-4o-mini)...\n")
-    records = []
-    for place in places_data:
-        ai_data = enrich_with_openai(place, localidad)
-        print(f"  ✔ {place['nombre']}: {ai_data['categoria']} | {ai_data['resumen_ia']}")
-        time.sleep(2)  # Pausa de 2s entre peticiones para evitar rate limits.
+    print("🤖 Procesando lote con OpenAI (gpt-4o-mini) para de-duplicar y enriquecer...\n")
+    ai_response = enrich_batch_with_openai(places_data, localidad)
+    restaurantes_limpios = ai_response.get("restaurantes_limpios", [])
+    
+    print(f"  ✔ De {len(places_data)} originales, quedaron {len(restaurantes_limpios)} únicos.")
 
+    records = []
+    for place in restaurantes_limpios:
         records.append(
             {
-                "google_place_id": place["id"],
-                "nombre": place["nombre"],
-                "direccion": place["direccion"],
-                "localidad": ai_data["localidad_real"],
-                "horarios": place["horarios"],
-                "rating": place["calificacion"],
-                "categoría": ai_data["categoria"],
-                "resumen_ia": ai_data["resumen_ia"],
-                # "review": place["cantidad_resenas"],  # ← descomentar cuando exista la columna
+                "google_place_id": place.get("id"),
+                "nombre": place.get("nombre"),
+                "direccion": place.get("direccion"),
+                "localidad": place.get("localidad_real", localidad),
+                "horarios": place.get("horarios", []),
+                "rating": place.get("calificacion"),
+                "categoría": place.get("categoria", "Sin categoría"),
+                "resumen_ia": place.get("resumen_ia", "Sin resumen"),
+                "foto_url": place.get("foto_url", ""),
+                "reseñas": place.get("reseñas", []),
                 "estado": "borrador",
             }
         )

@@ -60,7 +60,7 @@ export function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Des
     const scheduleStr = horarios.find(h => h.toLowerCase().startsWith(dayEs));
     if (!scheduleStr) return null;
 
-    const timePart = scheduleStr.substring(scheduleStr.indexOf(':') + 1).trim();
+    const timePart = scheduleStr.substring(scheduleStr.indexOf(':') + 1).trim(); // correccion  
     if (!timePart || timePart.toLowerCase() === "cerrado") return false;
     if (timePart.toLowerCase().includes("abierto 24 horas")) return true;
 
