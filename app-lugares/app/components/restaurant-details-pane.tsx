@@ -1,5 +1,6 @@
 import { Restaurant } from "@/app/types/restaurant";
 import { X, MapPin, Star, Edit2, Trash2 } from "lucide-react";
+import clsx from "clsx";
 import { OpenStatusBadge } from "./restaurant-table";
 
 interface Props {
@@ -33,10 +34,10 @@ export default function RestaurantDetailsPane({ restaurant, onClose, onEdit, onD
   if (!restaurant) return null;
 
   return (
-    <div className="relative flex flex-col h-[calc(100vh-120px)] sticky top-6 bg-[var(--bg-primary)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-[var(--shadow-card)] overflow-hidden animate-fadeIn">
+    <div className="relative flex flex-col h-[calc(100vh-120px)] sticky top-6 bg-[var(--bg-primary)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-[var(--shadow-card)] animate-fadeIn">
         
         {/* Header / Photo */}
-        <div className="relative h-64 w-full bg-[var(--bg-surface)] shrink-0 group">
+        <div className="relative h-64 w-full bg-[var(--bg-surface)] shrink-0 group rounded-t-[var(--radius-lg)] overflow-hidden">
           {restaurant.foto_url ? (
             <img 
               src={restaurant.foto_url} 
@@ -51,7 +52,7 @@ export default function RestaurantDetailsPane({ restaurant, onClose, onEdit, onD
           
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/20 to-black/30" />
           
-          <div className="absolute top-4 right-4 flex items-center gap-2">
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
             {onEdit && (
               <button
                 onClick={() => onEdit(restaurant)}

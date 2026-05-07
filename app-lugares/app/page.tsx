@@ -11,7 +11,9 @@ import RestaurantDetailsPane from "@/app/components/restaurant-details-pane";
 import EditModal from "@/app/components/edit-modal";
 import DeleteDialog from "@/app/components/delete-dialog";
 import Footer from "@/app/components/footer";
-import { Loader2, Plus } from "lucide-react";
+import { registrarCambio } from "@/app/lib/audit";
+import { Loader2, Plus, History, X } from "lucide-react";
+import AuditTimeline from "@/app/components/audit-timeline";
 import clsx from "clsx";
 
 const PAGE_SIZE = 15;
@@ -31,11 +33,9 @@ export default function Home() {
   });
   const [page, setPage] = useState(1);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(
-    null
-  );
-  const [deletingRestaurant, setDeletingRestaurant] =
-    useState<Restaurant | null>(null);
+  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
+  const [deletingRestaurant, setDeletingRestaurant] = useState<Restaurant | null>(null);
+  const [isGlobalAuditOpen, setIsGlobalAuditOpen] = useState(false);
 
   // Fetch data from Supabase
   useEffect(() => {
@@ -132,6 +132,8 @@ export default function Home() {
 
   const handleSave = useCallback(
     async (updated: Restaurant) => {
+      const original = restaurants.find((r) => r.id === updated.id);
+
       const dataToSave = {
         nombre: updated.nombre,
         direccion: updated.direccion,
@@ -156,6 +158,21 @@ export default function Home() {
           return;
         }
 
+        // Registrar cambio
+        if (original) {
+          const changedFields = Object.keys(dataToSave).filter(
+            (k) => (dataToSave as any)[k] !== (original as any)[k]
+          );
+          if (changedFields.length > 0) {
+            await registrarCambio({
+              restaurante_id: updated.id,
+              accion: "EDICIÓN",
+              valor_anterior: changedFields.reduce((acc, k) => ({ ...acc, [k]: (original as any)[k] }), {}),
+              valor_nuevo: changedFields.reduce((acc, k) => ({ ...acc, [k]: (dataToSave as any)[k] }), {}),
+            });
+          }
+        }
+
         // Update local state
         setRestaurants((prev) =>
           prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
@@ -174,11 +191,20 @@ export default function Home() {
           return;
         }
 
+        // Registrar creación
+        if (data) {
+          await registrarCambio({
+            restaurante_id: data.id,
+            accion: "CREACIÓN",
+            valor_nuevo: dataToSave,
+          });
+        }
+
         // Add to local state
         setRestaurants((prev) => [data as Restaurant, ...prev]);
       }
     },
-    []
+    [restaurants]
   );
 
   const handleDelete = useCallback((restaurant: Restaurant) => {
@@ -197,6 +223,13 @@ export default function Home() {
       alert("Error al eliminar: " + dbError.message);
       return;
     }
+
+    // Registrar eliminación
+    await registrarCambio({
+      restaurante_id: restaurant.id,
+      accion: "ELIMINACIÓN",
+      valor_anterior: restaurant,
+    });
 
     // Remove from local state
     setRestaurants((prev) => prev.filter((r) => r.id !== restaurant.id));
@@ -284,9 +317,9 @@ export default function Home() {
           {/* Inline Details Card (Desktop) */}
           {selectedRestaurant && (
             <div className="hidden lg:block">
-              <RestaurantDetailsPane 
-                restaurant={selectedRestaurant} 
-                onClose={() => setSelectedRestaurant(null)} 
+              <RestaurantDetailsPane
+                restaurant={selectedRestaurant}
+                onClose={() => setSelectedRestaurant(null)}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
               />
@@ -296,18 +329,18 @@ export default function Home() {
 
         {/* Mobile Overlay for Details */}
         <div className="lg:hidden">
-           {selectedRestaurant && (
-             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 p-4 pt-16 flex justify-center" onClick={() => setSelectedRestaurant(null)}>
-               <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md h-[calc(100vh-100px)] animate-slideDown">
-                  <RestaurantDetailsPane 
-                    restaurant={selectedRestaurant} 
-                    onClose={() => setSelectedRestaurant(null)} 
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                  />
-               </div>
-             </div>
-           )}
+          {selectedRestaurant && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 p-4 pt-16 flex justify-center" onClick={() => setSelectedRestaurant(null)}>
+              <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md h-[calc(100vh-100px)] animate-slideDown">
+                <RestaurantDetailsPane
+                  restaurant={selectedRestaurant}
+                  onClose={() => setSelectedRestaurant(null)}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -327,6 +360,49 @@ export default function Home() {
         onClose={() => setDeletingRestaurant(null)}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* Global Audit FAB */}
+      <button
+        onClick={() => setIsGlobalAuditOpen(true)}
+        className="fixed bottom-6 right-6 z-40 p-4 rounded-full bg-[var(--accent)] text-white shadow-2xl hover:scale-105 hover:shadow-cyan-500/25 transition-all duration-300"
+        title="Historial de Actividad Global"
+      >
+        <History className="w-6 h-6" />
+      </button>
+
+      {/* Global Audit Drawer */}
+      <div 
+        className={clsx(
+          "fixed inset-y-0 right-0 z-50 w-full max-w-md bg-[var(--bg-primary)] border-l border-[var(--border-subtle)] shadow-2xl transition-transform duration-300 transform",
+          isGlobalAuditOpen ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-6 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+            <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+              <History className="w-5 h-5 text-[var(--accent)]" />
+              Actividad Reciente
+            </h2>
+            <button 
+              onClick={() => setIsGlobalAuditOpen(false)}
+              className="p-2 rounded-full text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+            {isGlobalAuditOpen && <AuditTimeline restaurants={restaurants} />}
+          </div>
+        </div>
+      </div>
+      
+      {/* Drawer Overlay */}
+      {isGlobalAuditOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-fadeIn"
+          onClick={() => setIsGlobalAuditOpen(false)}
+        />
+      )}
     </div>
   );
 }
