@@ -12,9 +12,11 @@ interface RestaurantTableProps {
   onPageChange: (page: number) => void;
   onEdit: (restaurant: Restaurant) => void;
   onDelete: (restaurant: Restaurant) => void;
+  onRowClick?: (restaurant: Restaurant) => void;
+  isCompact?: boolean;
 }
 
-function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Desconocido" {
+export function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Desconocido" {
   if (!horarios || horarios.length === 0) return "Desconocido";
 
   const now = new Date();
@@ -97,7 +99,7 @@ function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Desconocid
   return "Desconocido";
 }
 
-function OpenStatusBadge({ horarios }: { horarios?: string[] }) {
+export function OpenStatusBadge({ horarios }: { horarios?: string[] }) {
   const status = getOpenStatus(horarios);
   
   const styles = {
@@ -136,6 +138,8 @@ export default function RestaurantTable({
   onPageChange,
   onEdit,
   onDelete,
+  onRowClick,
+  isCompact,
 }: RestaurantTableProps) {
   const totalPages = Math.ceil(totalFiltered / pageSize);
   const start = (page - 1) * pageSize;
@@ -170,19 +174,19 @@ export default function RestaurantTable({
                 <th className="text-left px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)]">
                   Nombre
                 </th>
-                <th className="text-left px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)] hidden md:table-cell">
+                <th className={clsx("text-left px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)] hidden md:table-cell", isCompact && "!hidden")}>
                   Localidad
                 </th>
-                <th className="text-left px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)] hidden lg:table-cell">
+                <th className={clsx("text-left px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)] hidden lg:table-cell", isCompact && "!hidden")}>
                   Categoría
                 </th>
                 <th className="text-left px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)]">
                   Rating
                 </th>
-                <th className="text-left px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)] hidden sm:table-cell">
+                <th className={clsx("text-left px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)] hidden sm:table-cell", isCompact && "!hidden")}>
                   Estado
                 </th>
-                <th className="text-right px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)]">
+                <th className={clsx("text-right px-5 py-3.5 text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--text-muted)]", isCompact && "hidden")}>
                   Acciones
                 </th>
               </tr>
@@ -191,9 +195,11 @@ export default function RestaurantTable({
               {showing.map((restaurant, idx) => (
                 <tr
                   key={restaurant.id}
+                  onClick={() => onRowClick?.(restaurant)}
                   className={clsx(
                     "group border-b border-[var(--border-subtle)] last:border-b-0 transition-colors duration-150",
-                    "hover:bg-[var(--bg-hover)]"
+                    "hover:bg-[var(--bg-hover)]",
+                    onRowClick && "cursor-pointer"
                   )}
                   style={{ animationDelay: `${idx * 30}ms` }}
                 >
@@ -210,7 +216,7 @@ export default function RestaurantTable({
                   </td>
 
                   {/* Locality */}
-                  <td className="px-5 py-4 hidden md:table-cell">
+                  <td className={clsx("px-5 py-4 hidden md:table-cell", isCompact && "!hidden")}>
                     <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
                       <MapPin className="w-3 h-3 text-[var(--text-dim)]" />
                       <span className="text-xs">{restaurant.localidad}</span>
@@ -218,7 +224,7 @@ export default function RestaurantTable({
                   </td>
 
                   {/* Category */}
-                  <td className="px-5 py-4 hidden lg:table-cell">
+                  <td className={clsx("px-5 py-4 hidden lg:table-cell", isCompact && "!hidden")}>
                     <span className="inline-flex items-center px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)]">
                       {restaurant.categoría}
                     </span>
@@ -230,22 +236,22 @@ export default function RestaurantTable({
                   </td>
 
                   {/* Status */}
-                  <td className="px-5 py-4 hidden sm:table-cell">
+                  <td className={clsx("px-5 py-4 hidden sm:table-cell", isCompact && "!hidden")}>
                     <OpenStatusBadge horarios={restaurant.horarios} />
                   </td>
 
                   {/* Actions */}
-                  <td className="px-5 py-4 text-right">
+                  <td className={clsx("px-5 py-4 text-right", isCompact && "hidden")}>
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                       <button
-                        onClick={() => onEdit(restaurant)}
+                        onClick={(e) => { e.stopPropagation(); onEdit(restaurant); }}
                         className="p-2 rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:text-[var(--accent-light)] hover:bg-[var(--accent-glow)] transition-all duration-150"
                         title="Editar"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => onDelete(restaurant)}
+                        onClick={(e) => { e.stopPropagation(); onDelete(restaurant); }}
                         className="p-2 rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-red-500/10 transition-all duration-150"
                         title="Eliminar"
                       >

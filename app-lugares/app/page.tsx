@@ -7,10 +7,12 @@ import { supabase } from "@/app/lib/supabase";
 import HeroSection from "@/app/components/hero-section";
 import SearchFilters from "@/app/components/search-filters";
 import RestaurantTable from "@/app/components/restaurant-table";
+import RestaurantDetailsPane from "@/app/components/restaurant-details-pane";
 import EditModal from "@/app/components/edit-modal";
 import DeleteDialog from "@/app/components/delete-dialog";
 import Footer from "@/app/components/footer";
 import { Loader2 } from "lucide-react";
+import clsx from "clsx";
 
 const PAGE_SIZE = 15;
 
@@ -28,6 +30,7 @@ export default function Home() {
     minRating: 0,
   });
   const [page, setPage] = useState(1);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(
     null
   );
@@ -214,17 +217,53 @@ export default function Home() {
           />
         </div>
 
-        {/* Table */}
-        <div className="mt-5 sm:mt-6">
-          <RestaurantTable
-            restaurants={filtered}
-            page={page}
-            pageSize={PAGE_SIZE}
-            totalFiltered={filtered.length}
-            onPageChange={setPage}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+        {/* Layout Grid (Table + Details Card) */}
+        <div className={clsx(
+          "mt-5 sm:mt-6 grid gap-6 items-start transition-all duration-300",
+          selectedRestaurant ? "grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px]" : "grid-cols-1"
+        )}>
+          {/* Table Container */}
+          <div className="min-w-0 transition-all duration-300">
+            <RestaurantTable
+              restaurants={filtered}
+              page={page}
+              pageSize={PAGE_SIZE}
+              totalFiltered={filtered.length}
+              onPageChange={setPage}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onRowClick={setSelectedRestaurant}
+              isCompact={!!selectedRestaurant}
+            />
+          </div>
+
+          {/* Inline Details Card (Desktop) */}
+          {selectedRestaurant && (
+            <div className="hidden lg:block">
+              <RestaurantDetailsPane 
+                restaurant={selectedRestaurant} 
+                onClose={() => setSelectedRestaurant(null)} 
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Overlay for Details */}
+        <div className="lg:hidden">
+           {selectedRestaurant && (
+             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 p-4 pt-16 flex justify-center" onClick={() => setSelectedRestaurant(null)}>
+               <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md h-[calc(100vh-100px)] animate-slideDown">
+                  <RestaurantDetailsPane 
+                    restaurant={selectedRestaurant} 
+                    onClose={() => setSelectedRestaurant(null)} 
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+               </div>
+             </div>
+           )}
         </div>
 
         {/* Footer */}

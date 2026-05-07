@@ -7,6 +7,8 @@ export interface Restaurant {
   categoría: string;
   rating: number;
   horarios: string[];
+  foto_url?: string;
+  reseñas?: { autor: string; texto: string; rating: number }[];
   resumen_ia: string;
   estado: "activo" | "inactivo" | "borrador";
   created_at?: string;
