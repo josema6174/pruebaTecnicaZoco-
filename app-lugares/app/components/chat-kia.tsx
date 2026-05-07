@@ -8,7 +8,8 @@ import clsx from "clsx";
 export default function ChatKia() {
   const [isOpen, setIsOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const { messages, sendMessage, isLoading } = useChat();
+  const { messages, sendMessage, status } = useChat();
+  const isLoading = status === "submitted" || status === "streaming";
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleChatSubmit = (e: React.FormEvent) => {
