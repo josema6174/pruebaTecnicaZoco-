@@ -165,7 +165,7 @@ export default function Home() {
           );
           if (changedFields.length > 0) {
             await registrarCambio({
-              restaurante_id: updated.id,
+              restaurante_id: updated.id.toString(),
               accion: "EDICIÓN",
               valor_anterior: changedFields.reduce((acc, k) => ({ ...acc, [k]: (original as any)[k] }), {}),
               valor_nuevo: changedFields.reduce((acc, k) => ({ ...acc, [k]: (dataToSave as any)[k] }), {}),
@@ -194,7 +194,7 @@ export default function Home() {
         // Registrar creación
         if (data) {
           await registrarCambio({
-            restaurante_id: data.id,
+            restaurante_id: data.id.toString(),
             accion: "CREACIÓN",
             valor_nuevo: dataToSave,
           });
@@ -226,7 +226,7 @@ export default function Home() {
 
     // Registrar eliminación
     await registrarCambio({
-      restaurante_id: restaurant.id,
+      restaurante_id: restaurant.id.toString(),
       accion: "ELIMINACIÓN",
       valor_anterior: restaurant,
     });
