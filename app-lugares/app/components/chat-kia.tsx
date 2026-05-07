@@ -8,8 +8,15 @@ import clsx from "clsx";
 export default function ChatKia() {
   const [isOpen, setIsOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const { messages, sendMessage, status } = useChat();
+  const { messages, sendMessage, status, error } = useChat();
   const isLoading = status === "submitted" || status === "streaming";
+  
+  // Debug log
+  useEffect(() => {
+    if (messages.length > 0) {
+      console.log("Kia Messages Update:", messages);
+    }
+  }, [messages]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleChatSubmit = (e: React.FormEvent) => {
@@ -105,12 +112,14 @@ export default function ChatKia() {
                       : "bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-tl-sm shadow-sm"
                   )}
                 >
-                  {m.parts?.map((part, index) => {
-                    if (part.type === "text") {
-                      return <span key={index}>{part.text}</span>;
-                    }
-                    return null;
-                  })}
+                  {/* Robust rendering for different SDK versions */}
+                  {m.parts ? (
+                    m.parts.map((part: any, index) => 
+                      part.type === "text" ? <span key={index}>{part.text}</span> : null
+                    )
+                  ) : (
+                    <span>{(m as any).content || (m as any).text || ""}</span>
+                  )}
                 </div>
               </div>
             ))
@@ -120,6 +129,15 @@ export default function ChatKia() {
               <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
               <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '150ms' }} />
               <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs text-center animate-fadeIn">
+              <p className="font-bold mb-1 flex items-center justify-center gap-1">
+                <X className="w-3 h-3" /> Error de conexión
+              </p>
+              <p className="opacity-80">{error.message || "Kia no pudo responder. Verifica tu conexión o API Key."}</p>
             </div>
           )}
           <div ref={messagesEndRef} />
