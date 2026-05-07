@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   let contextString = "No hay datos de restaurantes disponibles en este momento.";
   
   if (!error && restaurants && restaurants.length > 0) {
-    contextString = restaurants.map((r) => 
+    contextString = (restaurants as any[]).map((r) => 
       `Restaurante: ${r.nombre}
 Categoría (Especialidad): ${r.categoría}
 Descripción: ${r.resumen_ia}
