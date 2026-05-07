@@ -7,6 +7,7 @@ import { Restaurant } from "@/app/types/restaurant";
 
 interface AuditLog {
   id: string;
+  restaurante_id: string;
   accion: string;
   campo_modificado?: string;
   valor_anterior?: any;
