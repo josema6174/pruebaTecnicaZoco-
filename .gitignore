@@ -1,0 +1,14 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+__pycache__/
+
+# Variables de entorno (¡CRUCIAL!)
+*.env
+.env.local
+
+# Node (para Next.js)
+node_modules/
+.next/
+dist/
