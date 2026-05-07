@@ -14,6 +14,7 @@ import Footer from "@/app/components/footer";
 import { registrarCambio } from "@/app/lib/audit";
 import { Loader2, Plus, History, X } from "lucide-react";
 import AuditTimeline from "@/app/components/audit-timeline";
+import ChatKia from "@/app/components/chat-kia";
 import clsx from "clsx";
 
 const PAGE_SIZE = 15;
@@ -403,6 +404,9 @@ export default function Home() {
           onClick={() => setIsGlobalAuditOpen(false)}
         />
       )}
+
+      {/* Kia AI Chatbot */}
+      <ChatKia />
     </div>
   );
 }

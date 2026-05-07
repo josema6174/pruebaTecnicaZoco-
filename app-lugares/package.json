@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.63",
+    "@ai-sdk/react": "^3.0.178",
     "@supabase/supabase-js": "^2.105.3",
+    "ai": "^6.0.176",
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
     "next": "16.2.5",
