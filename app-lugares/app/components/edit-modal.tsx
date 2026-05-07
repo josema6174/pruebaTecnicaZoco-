@@ -67,10 +67,10 @@ export default function EditModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
           <div>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">
-              Editar restaurante
+              {form.id ? "Editar restaurante" : "Nuevo restaurante"}
             </h2>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              {form.nombre}
+              {form.id ? form.nombre : "Completá los datos básicos"}
             </p>
           </div>
           <button
@@ -91,6 +91,19 @@ export default function EditModal({
               value={form.nombre}
               onChange={(e) => update("nombre", e.target.value)}
               className={inputClass}
+              placeholder="Ej. La Gran Taberna"
+            />
+          </div>
+
+          {/* Photo URL */}
+          <div>
+            <label className={labelClass}>URL de la Imagen</label>
+            <input
+              type="text"
+              value={form.foto_url || ""}
+              onChange={(e) => update("foto_url", e.target.value)}
+              className={inputClass}
+              placeholder="https://ejemplo.com/foto.jpg"
             />
           </div>
 

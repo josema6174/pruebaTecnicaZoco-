@@ -20,11 +20,11 @@ export function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Des
   if (!horarios || horarios.length === 0) return "Desconocido";
 
   const now = new Date();
-  
+
   // Helper to format date in Argentina timezone
   const options = { timeZone: "America/Argentina/Tucuman" };
   const getDay = (date: Date) => date.toLocaleDateString("en-US", { ...options, weekday: "long" });
-  
+
   const dayMap: Record<string, string> = {
     Monday: "lunes", Tuesday: "martes", Wednesday: "miércoles",
     Thursday: "jueves", Friday: "viernes", Saturday: "sábado", Sunday: "domingo"
@@ -32,7 +32,7 @@ export function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Des
 
   const todayStr = getDay(now);
   const todayEs = dayMap[todayStr];
-  
+
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const yesterdayStr = getDay(yesterday);
   const yesterdayEs = dayMap[yesterdayStr];
@@ -48,7 +48,7 @@ export function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Des
     if (part.type === "minute") currentMinute = parseInt(part.value, 10);
   }
   if (currentHour === 24) currentHour = 0; // Intl sometimes returns 24 instead of 0
-  
+
   const currentTime = currentHour + currentMinute / 60;
 
   const parseTime = (t: string) => {
@@ -60,7 +60,7 @@ export function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Des
     const scheduleStr = horarios.find(h => h.toLowerCase().startsWith(dayEs));
     if (!scheduleStr) return null;
 
-    const timePart = scheduleStr.split(/:(.*)/s)[1]?.trim(); // Split by first colon
+    const timePart = scheduleStr.substring(scheduleStr.indexOf(':') + 1).trim();
     if (!timePart || timePart.toLowerCase() === "cerrado") return false;
     if (timePart.toLowerCase().includes("abierto 24 horas")) return true;
 
@@ -68,10 +68,10 @@ export function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Des
     for (const range of ranges) {
       const parts = range.split(/[-–]/).map(s => s.trim());
       if (parts.length < 2) continue;
-      
+
       const start = parseTime(parts[0]);
       let end = parseTime(parts[1]);
-      
+
       if (end <= start) {
         end += 24; // Crosses midnight
       }
@@ -101,7 +101,7 @@ export function getOpenStatus(horarios?: string[]): "Abierto" | "Cerrado" | "Des
 
 export function OpenStatusBadge({ horarios }: { horarios?: string[] }) {
   const status = getOpenStatus(horarios);
-  
+
   const styles = {
     Abierto: "bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20",
     Cerrado: "bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/20",

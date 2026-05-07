@@ -11,7 +11,7 @@ import RestaurantDetailsPane from "@/app/components/restaurant-details-pane";
 import EditModal from "@/app/components/edit-modal";
 import DeleteDialog from "@/app/components/delete-dialog";
 import Footer from "@/app/components/footer";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import clsx from "clsx";
 
 const PAGE_SIZE = 15;
@@ -115,32 +115,68 @@ export default function Home() {
     setEditingRestaurant(restaurant);
   }, []);
 
+  const handleAddNew = useCallback(() => {
+    setEditingRestaurant({
+      id: 0, // 0 is falsy, indicates a new record
+      nombre: "",
+      direccion: "",
+      localidad: "San Miguel de Tucumán",
+      categoría: "Restaurante",
+      rating: 0,
+      estado: "activo",
+      resumen_ia: "",
+      foto_url: "",
+      reseñas: [],
+    } as any);
+  }, []);
+
   const handleSave = useCallback(
     async (updated: Restaurant) => {
-      // Update in Supabase
-      const { error: dbError } = await supabase
-        .from("restaurantes")
-        .update({
-          nombre: updated.nombre,
-          direccion: updated.direccion,
-          localidad: updated.localidad,
-          "categoría": updated.categoría,
-          rating: updated.rating,
-          resumen_ia: updated.resumen_ia,
-          estado: updated.estado,
-        })
-        .eq("id", updated.id);
+      const dataToSave = {
+        nombre: updated.nombre,
+        direccion: updated.direccion,
+        localidad: updated.localidad,
+        "categoría": updated.categoría,
+        rating: updated.rating,
+        resumen_ia: updated.resumen_ia,
+        estado: updated.estado,
+        foto_url: updated.foto_url,
+      };
 
-      if (dbError) {
-        console.error("Error updating restaurant:", dbError);
-        alert("Error al guardar: " + dbError.message);
-        return;
+      if (updated.id) {
+        // Update in Supabase
+        const { error: dbError } = await supabase
+          .from("restaurantes")
+          .update(dataToSave)
+          .eq("id", updated.id);
+
+        if (dbError) {
+          console.error("Error updating restaurant:", dbError);
+          alert("Error al guardar: " + dbError.message);
+          return;
+        }
+
+        // Update local state
+        setRestaurants((prev) =>
+          prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
+        );
+      } else {
+        // Insert into Supabase
+        const { data, error: dbError } = await supabase
+          .from("restaurantes")
+          .insert([dataToSave])
+          .select()
+          .single();
+
+        if (dbError) {
+          console.error("Error inserting restaurant:", dbError);
+          alert("Error al crear: " + dbError.message);
+          return;
+        }
+
+        // Add to local state
+        setRestaurants((prev) => [data as Restaurant, ...prev]);
       }
-
-      // Update local state
-      setRestaurants((prev) =>
-        prev.map((r) => (r.id === updated.id ? updated : r))
-      );
     },
     []
   );
@@ -235,6 +271,14 @@ export default function Home() {
               onRowClick={setSelectedRestaurant}
               isCompact={!!selectedRestaurant}
             />
+
+            <button
+              onClick={handleAddNew}
+              className="mt-4 w-full py-3.5 flex items-center justify-center gap-2 border border-dashed border-[var(--border-strong)] rounded-[var(--radius-lg)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--accent-glow)] transition-all duration-200 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              Añadir Nuevo Restaurante
+            </button>
           </div>
 
           {/* Inline Details Card (Desktop) */}
