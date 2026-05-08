@@ -76,7 +76,7 @@ export default function ChatKia() {
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4 opacity-70">
               <Bot className="w-12 h-12 text-[var(--accent)] mb-4 opacity-50" />
-              <p className="text-sm text-[var(--text-primary)] font-medium mb-1">¡Hola! Soy Kia 👋</p>
+              <p className="text-sm text-[var(--text-primary)] font-medium mb-1">¡Hola! Soy Kia</p>
               <p className="text-xs text-[var(--text-secondary)]">Conozco todos los restaurantes de la plataforma. ¿Qué te gustaría comer hoy?</p>
             </div>
           ) : (
