@@ -3,40 +3,40 @@
 /* ── Design Tokens ─────────────────────────────────────────────────────────── */
 
 :root {
-  --bg-primary: #09090b;
-  --bg-surface: #111113;
-  --bg-elevated: #18181b;
-  --bg-hover: #1f1f23;
-  --bg-active: #27272a;
+  --bg-primary: #ffffff;
+  --bg-surface: #fafafa;
+  --bg-elevated: #f4f4f5;
+  --bg-hover: #e4e4e7;
+  --bg-active: #d4d4d8;
 
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-medium: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-subtle: #e4e4e7;
+  --border-medium: #71717a;
+  --border-strong: #09090b;
 
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
+  --text-primary: #09090b;
+  --text-secondary: #3f3f46;
   --text-muted: #71717a;
-  --text-dim: #52525b;
+  --text-dim: #a1a1aa;
 
-  --accent: #6366f1;
-  --accent-light: #818cf8;
-  --accent-glow: rgba(99, 102, 241, 0.15);
-  --accent-glow-strong: rgba(99, 102, 241, 0.3);
+  --accent: #09090b;
+  --accent-light: #27272a;
+  --accent-glow: rgba(0, 0, 0, 0.05);
+  --accent-glow-strong: rgba(0, 0, 0, 0.1);
 
-  --success: #22c55e;
+  --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --info: #3b82f6;
+  --info: #0ea5e9;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
 
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.08);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-subtle);
-  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-subtle);
-  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-medium);
+  --shadow-glow: 0 0 20px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--border-subtle);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border-subtle);
+  --shadow-modal: 0 12px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border-medium);
 
   --transition-fast: 120ms ease;
   --transition-base: 200ms ease;
@@ -58,8 +58,8 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-space-mono);
 }
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
@@ -75,7 +75,7 @@ html {
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-space-grotesk), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

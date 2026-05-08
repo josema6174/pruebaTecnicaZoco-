@@ -362,10 +362,9 @@ export default function Home() {
         onConfirm={handleConfirmDelete}
       />
 
-      {/* Global Audit FAB */}
       <button
         onClick={() => setIsGlobalAuditOpen(true)}
-        className="fixed bottom-6 right-6 z-40 p-4 rounded-full bg-[var(--accent)] text-white shadow-2xl hover:scale-105 hover:shadow-cyan-500/25 transition-all duration-300"
+        className="fixed bottom-6 right-6 z-40 p-4 rounded-full bg-white text-black border border-black shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:scale-105 transition-all duration-300"
         title="Historial de Actividad Global"
       >
         <History className="w-6 h-6" />

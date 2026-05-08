@@ -35,7 +35,7 @@ export default function RestaurantDetailsPane({ restaurant, onClose, onEdit, onD
 
   return (
     <div className="relative flex flex-col h-[calc(100vh-120px)] sticky top-6 bg-[var(--bg-primary)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] shadow-[var(--shadow-card)] animate-fadeIn">
-        
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {/* Header / Photo */}
         <div className="relative h-64 w-full bg-[var(--bg-surface)] shrink-0 group rounded-t-[var(--radius-lg)] overflow-hidden">
           {restaurant.foto_url ? (
@@ -50,7 +50,7 @@ export default function RestaurantDetailsPane({ restaurant, onClose, onEdit, onD
             </div>
           )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/20 to-black/30" />
+          <div className="absolute inset-0 bg-black/10" />
           
           <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
             {onEdit && (
@@ -79,20 +79,21 @@ export default function RestaurantDetailsPane({ restaurant, onClose, onEdit, onD
               <X className="w-5 h-5" />
             </button>
           </div>
+        </div>
 
-          <div className="absolute bottom-6 left-6 right-6">
-            <span className="inline-block px-2.5 py-1 mb-3 rounded-[var(--radius-sm)] bg-[var(--accent)] text-white text-[10px] font-bold tracking-wider uppercase shadow-lg">
+        {/* Content */}
+        <div className="p-6 space-y-8 bg-[var(--bg-primary)]">
+          
+          {/* Header Info */}
+          <div>
+            <span className="inline-block px-2.5 py-1 mb-3 rounded-[var(--radius-sm)] bg-[var(--accent)] text-white text-[10px] font-bold tracking-wider uppercase">
               {restaurant.categoría}
             </span>
-            <h2 className="text-2xl font-bold text-white leading-tight drop-shadow-md">
+            <h2 className="text-3xl font-bold text-[var(--text-primary)] leading-tight">
               {restaurant.nombre}
             </h2>
           </div>
-        </div>
 
-        {/* Content Scrollable */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 bg-[var(--bg-primary)]">
-          
           {/* Quick Info */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -114,7 +115,7 @@ export default function RestaurantDetailsPane({ restaurant, onClose, onEdit, onD
                 "{restaurant.resumen_ia}"
               </p>
               <p className="text-[10px] uppercase tracking-wider text-[var(--text-dim)] mt-3 font-semibold">
-                Resumen de Inteligencia Artificial
+                Resumen
               </p>
             </div>
           )}
@@ -145,8 +146,8 @@ export default function RestaurantDetailsPane({ restaurant, onClose, onEdit, onD
               <p className="text-sm text-[var(--text-dim)] italic">No hay reseñas disponibles.</p>
             )}
           </div>
-
         </div>
+      </div>
     </div>
   );
 }

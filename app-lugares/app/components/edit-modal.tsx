@@ -42,7 +42,11 @@ export default function EditModal({
     setForm({ ...form, [field]: value });
 
   const handleSave = () => {
-    onSave(form);
+    const finalForm = { ...form };
+    if (finalForm.rating === "" || isNaN(finalForm.rating as any)) {
+      finalForm.rating = 0;
+    }
+    onSave(finalForm);
     onClose();
   };
 
@@ -160,7 +164,17 @@ export default function EditModal({
                 max="5"
                 step="0.1"
                 value={form.rating}
-                onChange={(e) => update("rating", parseFloat(e.target.value) || 0)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "") {
+                    update("rating", "");
+                  } else if (/^[0-5](\.\d?)?$/.test(val)) {
+                    const num = parseFloat(val);
+                    if (num <= 5) {
+                      update("rating", val);
+                    }
+                  }
+                }}
                 className={inputClass}
               />
             </div>
@@ -178,9 +192,9 @@ export default function EditModal({
             </div>
           </div>
 
-          {/* Resumen IA */}
+          {/* Resumen */}
           <div>
-            <label className={labelClass}>Resumen IA</label>
+            <label className={labelClass}>Resumen</label>
             <textarea
               rows={2}
               value={form.resumen_ia}
