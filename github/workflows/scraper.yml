@@ -1,0 +1,31 @@
+name: Automatización del Scraper de Lugares
+
+on:
+  workflow_dispatch: # Esto es clave: permite que n8n dispare la acción
+  schedule:
+    - cron: '0 3 * * 1' # Respaldo de seguridad: corre los lunes a las 3 AM
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests openai python-dotenv supabase
+
+      - name: Ejecutar Scraper
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scraper.py
