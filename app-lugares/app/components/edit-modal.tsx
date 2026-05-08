@@ -43,7 +43,7 @@ export default function EditModal({
 
   const handleSave = () => {
     const finalForm = { ...form };
-    if (finalForm.rating === "" || isNaN(finalForm.rating as any)) {
+    if ((finalForm.rating as any) === "" || isNaN(finalForm.rating as any)) {
       finalForm.rating = 0;
     }
     onSave(finalForm);
