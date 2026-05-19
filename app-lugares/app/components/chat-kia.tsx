@@ -10,7 +10,7 @@ export default function ChatKia() {
   const [chatInput, setChatInput] = useState("");
   const { messages, sendMessage, status, error } = useChat();
   const isLoading = status === "submitted" || status === "streaming";
-  
+
   // Debug log
   useEffect(() => {
     if (messages.length > 0) {
@@ -63,7 +63,7 @@ export default function ChatKia() {
               <p className="text-[10px] text-white/80 uppercase tracking-wider font-semibold">Experta Gastronómica</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
           >
@@ -81,8 +81,8 @@ export default function ChatKia() {
             </div>
           ) : (
             messages.map((m) => (
-              <div 
-                key={m.id} 
+              <div
+                key={m.id}
                 className={clsx(
                   "flex flex-col max-w-[85%]",
                   m.role === "user" ? "ml-auto items-end" : "mr-auto items-start"
@@ -101,17 +101,17 @@ export default function ChatKia() {
                     </>
                   )}
                 </div>
-                <div 
+                <div
                   className={clsx(
                     "p-3 rounded-2xl text-sm leading-relaxed",
-                    m.role === "user" 
-                      ? "bg-[var(--accent)] text-white rounded-tr-sm" 
+                    m.role === "user"
+                      ? "bg-[var(--accent)] text-white rounded-tr-sm"
                       : "bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-tl-sm shadow-sm"
                   )}
                 >
                   {/* Robust rendering for different SDK versions */}
                   {m.parts ? (
-                    m.parts.map((part: any, index) => 
+                    m.parts.map((part: any, index) =>
                       part.type === "text" ? <span key={index}>{part.text}</span> : null
                     )
                   ) : (
@@ -141,8 +141,8 @@ export default function ChatKia() {
         </div>
 
         {/* Input Form */}
-        <form 
-          onSubmit={handleChatSubmit} 
+        <form
+          onSubmit={handleChatSubmit}
           className="p-3 border-t border-[var(--border-subtle)] bg-[var(--bg-primary)] flex gap-2 shrink-0"
         >
           <input
@@ -152,8 +152,8 @@ export default function ChatKia() {
             className="flex-1 bg-[var(--bg-surface)] border border-[var(--border-medium)] rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all text-[var(--text-primary)]"
             disabled={isLoading}
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isLoading || !chatInput.trim()}
             className="w-10 h-10 rounded-full bg-[var(--accent)] text-white flex items-center justify-center shrink-0 disabled:opacity-50 disabled:hover:scale-100 hover:scale-105 transition-all shadow-md"
           >

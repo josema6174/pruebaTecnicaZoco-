@@ -1,5 +1,3 @@
-import { openai } from "@ai-sdk/openai";
-import { streamText, convertToModelMessages } from "ai";
 import { supabase } from "@/app/lib/supabase";
 
 export const maxDuration = 30;
@@ -7,8 +5,16 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const body = await req.json();
   console.log("API received body:", JSON.stringify(body, null, 2));
-  const { messages } = body;
+  
+  // Mantenemos la lectura del body y supabase por si en el futuro se quiere reactivar fácilmente
+  // const { messages } = body;
 
+  /*
+  // ==========================================
+  // LLAMADA REAL COMENTADA PARA EVITAR CONSUMO DE TOKENS EN LA VERSIÓN DE DEMOSTRACIÓN
+  // ==========================================
+  import { openai } from "@ai-sdk/openai";
+  import { streamText, convertToModelMessages } from "ai";
 
   // Obtener el contexto actual de la base de datos de Supabase
   const { data: restaurants, error } = await supabase
@@ -49,4 +55,30 @@ ${contextString}
   });
 
   return result.toUIMessageStreamResponse();
+  // ==========================================
+  */
+
+  // RESPUESTA MOCK (SIMULADA) PARA LA VERSIÓN DE DEMOSTRACIÓN
+  const mockText = "🤖 El agente ha sido desactivado.";
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      // AI SDK v6 UIMessageStream protocol:
+      // 2: start message event
+      controller.enqueue(encoder.encode(`2:[{"messageId":"mock-1","role":"assistant"}]\n`));
+      // 0: text delta
+      controller.enqueue(encoder.encode(`0:${JSON.stringify(mockText)}\n`));
+      // d: finish with usage
+      controller.enqueue(encoder.encode(`d:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0}}\n`));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "x-vercel-ai-data-stream": "v1",
+    },
+  });
 }

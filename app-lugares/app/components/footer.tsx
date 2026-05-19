@@ -5,8 +5,7 @@ export default function Footer() {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[var(--text-dim)]">
         <p>
           © {new Date().getFullYear()}{" "}
-          <span className="text-[var(--text-muted)]">Gastro Tucumán</span> —
-          Prueba Técnica Zoco
+          <span className="text-[var(--text-muted)]">Gastro Tucumán</span>
         </p>
         <p className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
