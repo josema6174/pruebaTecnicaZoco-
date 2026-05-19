@@ -1,4 +1,4 @@
-# Gestor de establecimientos gastronómicos de Tucumán - Prueba Técnica
+# Gestor de establecimientos gastronómicos de Tucumán 
 
 **Demo en vivo:** [https://prueba-tecnica-zoco-mocha.vercel.app]
 
@@ -54,3 +54,8 @@ Los principales problemas que puede tener el sistema pueden ser, primero, los l�
 ### ¿Cómo mejorarías la calidad de los datos?
 
 Para mejorar la integridad de los datos, agregaría otra capa de procesamiento en la que implementaría librerías de Python como Pydantic para forzar una validación de datos estricta antes de la inserción y durante la lectura, para asegurar que ningún dato malformado llegue a la base de datos.
+
+
+### IMPORTANTE 
+
+las funciones con chat con ia asi como la automatizacion han sido desactivadas para ahorrar tockens 
